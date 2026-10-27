@@ -4,105 +4,146 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Oswald:300,400">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #05060a; color: #fff;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; cursor: none; }
 
-  /* wallpapers: stacked layers that cross-fade */
-  .wall { position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0;
+  /* scenes: stacked SVG wallpapers that cross-fade */
+  .wall { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0;
     -webkit-transition: opacity 3s ease; transition: opacity 3s ease; }
   .wall.on { opacity: 1; }
-  .w0 { background: -webkit-linear-gradient(315deg, #0f2027, #203a43 50%, #2c5364); background: linear-gradient(135deg, #0f2027, #203a43 50%, #2c5364); }
-  .w1 { background: -webkit-linear-gradient(315deg, #1a0b2e, #3b1a5a 55%, #7a2e6e); background: linear-gradient(135deg, #1a0b2e, #3b1a5a 55%, #7a2e6e); }
-  .w2 { background: -webkit-linear-gradient(315deg, #0b1a14, #12362b 55%, #1f6b52); background: linear-gradient(135deg, #0b1a14, #12362b 55%, #1f6b52); }
-  .w3 { background: -webkit-linear-gradient(315deg, #1c1208, #4a2c10 55%, #a8591a); background: linear-gradient(135deg, #1c1208, #4a2c10 55%, #a8591a); }
+  .wall svg { width: 100%; height: 100%; display: block; }
   .shade { position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: -webkit-linear-gradient(top, rgba(0,0,0,0.15), rgba(0,0,0,0.55)); background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.55)); }
+    background: -webkit-linear-gradient(top, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%); }
 
-  .stage { position: absolute; top: 0; left: 0; right: 0; bottom: 0; padding: 5% 6%; }
+  /* date + weather line */
+  .info { position: absolute; top: 6%; left: 0; right: 0; text-align: center;
+    font-size: 1.7vw; letter-spacing: 0.04em; opacity: 0.88; text-shadow: 0 0 1vw rgba(0,0,0,0.35); }
+  .info .dot { opacity: 0.5; padding: 0 0.8vw; }
 
-  .top { display: -webkit-flex; display: flex; -webkit-justify-content: space-between; justify-content: space-between; -webkit-align-items: flex-start; align-items: flex-start; }
-  .clock { font-size: 7.2vw; font-weight: 200; letter-spacing: 0.02em; line-height: 1; }
-  .date { font-size: 1.9vw; margin-top: 1.2vw; opacity: 0.75; letter-spacing: 0.04em; }
-  .greet { font-size: 2.2vw; margin-top: 2.4vw; opacity: 0.9; font-weight: 300; }
-  .wx { text-align: right; }
-  .wx .temp { font-size: 4.6vw; font-weight: 200; line-height: 1; }
-  .wx .desc { font-size: 1.7vw; opacity: 0.75; margin-top: 0.8vw; }
-  .wx .city { font-size: 1.4vw; opacity: 0.55; margin-top: 0.4vw; letter-spacing: 0.1em; text-transform: uppercase; }
+  /* giant gradient clock */
+  .clock { position: absolute; top: 9%; left: 0; right: 0; text-align: center; line-height: 1;
+    font-family: "Oswald", "Arial Narrow", "Helvetica Neue", Arial, sans-serif; font-weight: 300;
+    font-size: 25vw; letter-spacing: 0.01em;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent; }
+  .c0 { background-image: -webkit-linear-gradient(top, #ffffff 15%, #f4a6c0 85%); background-image: linear-gradient(to bottom, #ffffff 15%, #f4a6c0 85%); }
+  .c1 { background-image: -webkit-linear-gradient(top, #fff3dc 15%, #f5a96a 85%); background-image: linear-gradient(to bottom, #fff3dc 15%, #f5a96a 85%); }
+  .c2 { background-image: -webkit-linear-gradient(top, #ffffff 15%, #8fa8ff 85%); background-image: linear-gradient(to bottom, #ffffff 15%, #8fa8ff 85%); }
+  .c3 { background-image: -webkit-linear-gradient(top, #ffffff 15%, #8fe0d6 85%); background-image: linear-gradient(to bottom, #ffffff 15%, #8fe0d6 85%); }
 
-  .dock { position: absolute; left: 6%; right: 6%; bottom: 8%; }
-  .dock-title { font-size: 1.4vw; opacity: 0.55; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 1.6vw; }
-  .row { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
-  .tile { width: 15.5vw; height: 9.6vw; margin: 0 1.6vw 1.6vw 0; border-radius: 1.2vw;
-    background: rgba(255,255,255,0.10); border: 0.2vw solid rgba(255,255,255,0.12);
-    display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column;
-    -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
-    -webkit-transition: -webkit-transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
-    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease; }
-  .tile .ico { font-size: 3.4vw; line-height: 1; margin-bottom: 0.8vw; }
-  .tile .nm { font-size: 1.6vw; letter-spacing: 0.04em; }
-  .tile.focus { -webkit-transform: scale(1.08); transform: scale(1.08);
-    background: rgba(255,255,255,0.26); border-color: rgba(255,255,255,0.9); }
-
-  .hint { position: absolute; left: 6%; bottom: 3%; font-size: 1.2vw; opacity: 0.4; letter-spacing: 0.08em; }
+  /* icon dock */
+  .dock { position: absolute; left: 6%; right: 6%; bottom: 7%; }
+  .row { display: -webkit-flex; display: flex; -webkit-align-items: flex-start; align-items: flex-start; }
+  .cell { width: 8.2vw; margin-right: 1.3vw; text-align: center; }
+  .icon { width: 8.2vw; height: 8.2vw; border-radius: 1.9vw; position: relative;
+    display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
+    font-weight: 700; font-size: 3.3vw; color: #fff; box-shadow: 0 0.8vw 2vw rgba(0,0,0,0.4);
+    -webkit-transition: -webkit-transform 0.2s ease, box-shadow 0.2s ease; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .icon small { position: absolute; left: 0; right: 0; bottom: 0.9vw; font-size: 1.1vw; font-weight: 600; letter-spacing: 0.06em; opacity: 0.85; text-transform: uppercase; }
+  .label { margin-top: 1vw; font-size: 1.3vw; letter-spacing: 0.04em; opacity: 0; -webkit-transition: opacity 0.2s ease; transition: opacity 0.2s ease; }
+  .cell.focus .icon { -webkit-transform: scale(1.14); transform: scale(1.14);
+    box-shadow: 0 1.2vw 3vw rgba(0,0,0,0.55), 0 0 0 0.25vw rgba(255,255,255,0.9); }
+  .cell.focus .label { opacity: 1; }
 </style>
 </head>
 <body>
-  <div class="wall w0 on"></div>
-  <div class="wall w1"></div>
-  <div class="wall w2"></div>
-  <div class="wall w3"></div>
+
+  <!-- Scene 0: dusk peak -->
+  <div class="wall on"><svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="s0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2150"/><stop offset="0.5" stop-color="#8c4a80"/><stop offset="0.85" stop-color="#e7897f"/><stop offset="1" stop-color="#f3b48a"/></linearGradient>
+      <radialGradient id="g0" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd2a8" stop-opacity="0.8"/><stop offset="1" stop-color="#ffd2a8" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#s0)"/>
+    <circle cx="960" cy="820" r="520" fill="url(#g0)"/>
+    <polygon points="0,880 260,700 470,800 700,640 930,820 1150,690 1400,790 1650,650 1920,820 1920,1080 0,1080" fill="#4a3358" opacity="0.75"/>
+    <polygon points="0,950 300,820 520,900 780,760 960,520 1080,700 1240,640 1500,860 1750,780 1920,900 1920,1080 0,1080" fill="#1c1426"/>
+    <polygon points="0,1010 400,930 800,990 1200,920 1600,1000 1920,950 1920,1080 0,1080" fill="#0e0a14"/>
+  </svg></div>
+
+  <!-- Scene 1: dune sunset -->
+  <div class="wall"><svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1032"/><stop offset="0.45" stop-color="#b24f7c"/><stop offset="0.8" stop-color="#f09a5c"/><stop offset="1" stop-color="#ffd08a"/></linearGradient>
+      <radialGradient id="g1" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff0c0" stop-opacity="0.95"/><stop offset="0.35" stop-color="#ffb066" stop-opacity="0.5"/><stop offset="1" stop-color="#ffb066" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#s1)"/>
+    <circle cx="1320" cy="760" r="480" fill="url(#g1)"/>
+    <circle cx="1320" cy="760" r="70" fill="#fff4d0"/>
+    <path d="M0,800 C300,720 600,860 960,790 C1300,730 1600,830 1920,770 L1920,1080 L0,1080 Z" fill="#a8502e"/>
+    <path d="M0,880 C350,800 700,940 1100,860 C1450,800 1700,900 1920,850 L1920,1080 L0,1080 Z" fill="#7a3322"/>
+    <path d="M0,960 C400,900 800,1010 1200,950 C1550,900 1750,980 1920,940 L1920,1080 L0,1080 Z" fill="#43191a"/>
+  </svg></div>
+
+  <!-- Scene 2: night sky -->
+  <div class="wall"><svg id="nightsvg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04050d"/><stop offset="0.6" stop-color="#101a3c"/><stop offset="1" stop-color="#2b3f78"/></linearGradient>
+      <radialGradient id="g2" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#8fa8ff" stop-opacity="0.35"/><stop offset="1" stop-color="#8fa8ff" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#s2)"/>
+    <circle cx="520" cy="300" r="420" fill="url(#g2)"/>
+    <g id="stars"></g>
+    <polygon points="0,900 240,780 520,860 820,700 1080,840 1380,740 1680,860 1920,780 1920,1080 0,1080" fill="#0b1228"/>
+    <polygon points="0,990 380,920 760,985 1180,915 1560,990 1920,930 1920,1080 0,1080" fill="#05081a"/>
+  </svg></div>
+
+  <!-- Scene 3: teal dawn over water -->
+  <div class="wall"><svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b2433"/><stop offset="0.5" stop-color="#2a7684"/><stop offset="0.72" stop-color="#f2c9a0"/><stop offset="0.73" stop-color="#d89a7a"/><stop offset="1" stop-color="#143846"/></linearGradient>
+      <radialGradient id="g3" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff2cf" stop-opacity="0.9"/><stop offset="1" stop-color="#fff2cf" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#s3)"/>
+    <circle cx="960" cy="780" r="420" fill="url(#g3)"/>
+    <rect x="860" y="790" width="200" height="290" fill="#ffe6b8" opacity="0.18"/>
+    <rect x="900" y="800" width="120" height="280" fill="#ffe6b8" opacity="0.22"/>
+    <polygon points="0,790 420,740 860,790 1300,745 1920,795 1920,810 0,810" fill="#10303c" opacity="0.7"/>
+  </svg></div>
+
   <div class="shade"></div>
 
-  <div class="stage">
-    <div class="top">
-      <div>
-        <div class="clock" id="clock">--:--</div>
-        <div class="date" id="date"></div>
-        <div class="greet" id="greet"></div>
-      </div>
-      <div class="wx">
-        <div class="temp" id="temp"></div>
-        <div class="desc" id="desc"></div>
-        <div class="city" id="city"></div>
-      </div>
-    </div>
+  <div class="info" id="info"></div>
+  <div class="clock c0" id="clock">00:00</div>
 
-    <div class="dock">
-      <div class="dock-title">Shortcuts</div>
-      <div class="row" id="row"></div>
-    </div>
-    <div class="hint">Arrows to move  /  OK to open</div>
-  </div>
+  <div class="dock"><div class="row" id="row"></div></div>
 
 <script>
 (function () {
   // ===== EDIT THESE =====
-  var CITY = "Dubai";
   var LAT = 25.2048, LON = 55.2708;
-  var SHORTCUTS = [
-    { name: "YouTube",  icon: "\u25B6", url: "https://www.youtube.com/tv" },
-    { name: "Netflix",  icon: "N",      url: "https://www.netflix.com" },
-    { name: "Shahid",   icon: "S",      url: "https://shahid.mbc.net" },
-    { name: "Google",   icon: "G",      url: "https://www.google.com" },
-    { name: "News",     icon: "\u2630", url: "https://news.google.com" },
-    { name: "Weather",  icon: "\u2600", url: "https://www.timeanddate.com/weather/uae/dubai" }
+  var APPS = [
+    { name: "YouTube",  mark: "▶", bg: "#c4302b", url: "https://www.youtube.com/tv" },
+    { name: "Netflix",  mark: "N",      bg: "#1c1c1f", url: "https://www.netflix.com" },
+    { name: "Shahid",   mark: "S",      bg: "#2f6b5e", url: "https://shahid.mbc.net" },
+    { name: "TOD",      mark: '<span style="font-size:2.5vw">TOD</span>', bg: "#3a1d6e", url: "https://www.tod.tv" },
+    { name: "Prime",    mark: "P",      bg: "#1a5fa8", url: "https://www.primevideo.com" },
+    { name: "Disney+",  mark: "D",      bg: "#1b2a6b", url: "https://www.disneyplus.com" },
+    { name: "Google",   mark: "G",      bg: "#3b6fd8", url: "https://www.google.com" },
+    { name: "News",     mark: "☰", bg: "#6a3fa0", url: "https://news.google.com" },
+    { name: "Weather",  mark: "☀", bg: "#d98a2b", url: "https://www.timeanddate.com/weather/uae/dubai" }
   ];
   // ======================
 
   var $ = function (id) { return document.getElementById(id); };
   function pad(n) { return (n < 10 ? "0" : "") + n; }
-
   var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var wx = "";
 
+  function paintInfo() {
+    var d = new Date();
+    $("info").innerHTML = DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()] +
+      (wx ? '<span class="dot">•</span>' + wx : "");
+  }
   function tick() {
     var d = new Date();
     $("clock").innerHTML = pad(d.getHours()) + ":" + pad(d.getMinutes());
-    $("date").innerHTML = DAYS[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()];
-    var h = d.getHours();
-    $("greet").innerHTML = h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Good night";
+    paintInfo();
   }
   tick();
   setInterval(tick, 15000);
@@ -118,9 +159,8 @@
         if (x.readyState !== 4 || x.status !== 200) return;
         try {
           var c = JSON.parse(x.responseText).current_weather;
-          $("temp").innerHTML = Math.round(c.temperature) + "\u00B0";
-          $("desc").innerHTML = CODES[c.weathercode] || "";
-          $("city").innerHTML = CITY;
+          wx = Math.round(c.temperature) + "° " + (CODES[c.weathercode] || "");
+          paintInfo();
         } catch (e) {}
       };
       x.send();
@@ -129,45 +169,53 @@
   weather();
   setInterval(weather, 30 * 60 * 1000);
 
-  // wallpapers cross-fade every 45s
+  // stars for the night scene
+  (function () {
+    var g = $("stars"), ns = "http://www.w3.org/2000/svg", i, c, seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (i = 0; i < 160; i++) {
+      c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", Math.round(rnd() * 1920));
+      c.setAttribute("cy", Math.round(rnd() * 700));
+      c.setAttribute("r", (0.6 + rnd() * 1.6).toFixed(1));
+      c.setAttribute("fill", "#ffffff");
+      c.setAttribute("opacity", (0.35 + rnd() * 0.65).toFixed(2));
+      g.appendChild(c);
+    }
+  })();
+
+  // scenes cross-fade every 45s, clock tint follows the scene
   var walls = document.getElementsByClassName("wall");
   var wi = 0;
   setInterval(function () {
     walls[wi].className = walls[wi].className.replace(" on", "");
     wi = (wi + 1) % walls.length;
     walls[wi].className += " on";
+    $("clock").className = "clock c" + wi;
   }, 45000);
 
-  // tiles + remote navigation
-  var row = $("row"), tiles = [], cur = 0, i;
-  for (i = 0; i < SHORTCUTS.length; i++) {
-    var t = document.createElement("div");
-    t.className = "tile";
-    t.innerHTML = '<div class="ico">' + SHORTCUTS[i].icon + '</div><div class="nm">' + SHORTCUTS[i].name + "</div>";
-    row.appendChild(t);
-    tiles.push(t);
+  // icon dock + remote navigation (left / right / OK)
+  var row = $("row"), cells = [], cur = 0, i;
+  for (i = 0; i < APPS.length; i++) {
+    var a = APPS[i], cell = document.createElement("div");
+    cell.className = "cell";
+    cell.innerHTML = '<div class="icon" style="background:' + a.bg + '">' + a.mark + '</div><div class="label">' + a.name + "</div>";
+    row.appendChild(cell);
+    cells.push(cell);
   }
   function setFocus(n) {
-    if (n < 0 || n >= tiles.length) return;
-    tiles[cur].className = "tile";
+    if (n < 0 || n >= cells.length) return;
+    cells[cur].className = "cell";
     cur = n;
-    tiles[cur].className = "tile focus";
+    cells[cur].className = "cell focus";
   }
   setFocus(0);
 
-  function perRow() {
-    var top = tiles[0].offsetTop, n = 0;
-    while (n < tiles.length && tiles[n].offsetTop === top) n++;
-    return n || 1;
-  }
-
   document.onkeydown = function (e) {
-    var k = e.keyCode, pr = perRow();
+    var k = e.keyCode;
     if (k === 37) setFocus(cur - 1);
     else if (k === 39) setFocus(cur + 1);
-    else if (k === 38) setFocus(cur - pr);
-    else if (k === 40) setFocus(cur + pr);
-    else if (k === 13) window.location.href = SHORTCUTS[cur].url;
+    else if (k === 13) window.location.href = APPS[cur].url;
     else return;
     if (e.preventDefault) e.preventDefault();
   };
